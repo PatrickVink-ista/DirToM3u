@@ -1,5 +1,5 @@
 ﻿string path = args.Length > 0 ? args[0] : Environment.CurrentDirectory;
-if (path.Last() == '\\')
+if (path.Last() == Path.DirectorySeparatorChar)
     path = path.Substring(0, path.Length - 1);
 
 string[] files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
