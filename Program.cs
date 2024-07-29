@@ -51,7 +51,9 @@ void Add(string file)
         InternalAdd(file);
         return;
     }
-    //FileInfo fileInfo = new FileInfo(file);
+    FileInfo fileInfo = new FileInfo(file);
+    if (fileInfo.Length == 0)
+        return;
     clip = player.newMedia(file);
     int duration = GetDuration(file);
     file = file.Substring(path.Length + 1);
