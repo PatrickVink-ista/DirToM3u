@@ -22,12 +22,10 @@ foreach (var file in files)
 if (HasItems())
 {
     path = Path.Combine(path, "playlist.m3u");
-    //File.WriteAllLines(path, m3u);
+    File.WriteAllLines(path, m3u);
 }
 void Sort()
 {
-    return;
-
     var filtered = files
         .Where(HasValidExtension);
     var matches = filtered
@@ -76,6 +74,6 @@ bool HasItems() => m3u.Count > 1;
 
 partial class Program
 {
-    [GeneratedRegex(@"(\d+).+(\d+).")]
+    [GeneratedRegex(@"(\d+)\D+(\d+)")]
     private static partial Regex NumericExtract();
 }
