@@ -15,13 +15,6 @@ Add("#EXTM3U");
 foreach (var file in files)
 {
     Add(file);
-    //string ext = Path.GetExtension(file).ToLower();
-    //switch (ext)
-    //{
-    //    case ".mp4":
-    //        Add(file);
-    //        break;
-    //}
 }
 
 if (HasItems())
