@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="deploy.bat" />
+  </ItemGroup>
+
+  <ItemGroup>
     <COMReference Include="WMPLib">
       <VersionMinor>0</VersionMinor>
       <VersionMajor>1</VersionMajor>
