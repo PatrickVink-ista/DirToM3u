@@ -1,91 +1,21 @@
 ﻿using Fringilla.Media;
 
-string path = args.Length > 0 ? args[0] : Environment.CurrentDirectory;
-if (path.Last() == Path.DirectorySeparatorChar)
-    path = path.Substring(0, path.Length - 1);
-
-string[] files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
-
-//todo Replace with Playlist when Fringilla.Media.Playlist is ready
-List<string> m3u = [];
-
 WMPLib.WindowsMediaPlayer player = new();
 
-Sort();
+string path = (args.Length > 0 ? args[0] : Environment.CurrentDirectory).ExcludeTrailingPathDelimiter();
 
-Add(M3u.ExtFileHeader);
+Playlist<M3u> playlist = Playlist<M3u>.CreateFromDirectory<M3u>(path, GetExtendedInfo);
+string playlistPath = Path.Combine(path, "playlist.m3u");
+if (playlist.Count > 0)
+    playlist.WriteToFile(playlistPath);
+else
+    File.Delete(playlistPath);
 
-foreach (var file in files)
+ExtendedInfo GetExtendedInfo(string path)
 {
-    Add(file);
-}
-
-if (HasItems())
-{
-    path = Path.Combine(path, "playlist.m3u");
-    File.WriteAllLines(path, m3u);
-}
-
-void Sort()
-{
-    var filtered = files
-        .Where(HasValidExtension);
-    var matches = filtered
-        .Select(x => (NumericExtract().Match(Path.GetFileName(x)), x));
-    if (matches.Count() != filtered.Count())
-    {
-        files = filtered.ToArray();
-        return;
-    }
-    var keyed = matches
-        .Select(x => (
-            int.Parse(x.Item1.Groups.Values.ToList()[1].Value), 
-            int.Parse(x.Item1.Groups.Values.ToList()[2].Value), 
-            x.Item2));
-    var indexed = keyed
-        .OrderBy(x => x.Item1).ThenBy(x => x.Item2);
-    var sorted = indexed
-        .Select(x => x.Item3);
-    files = sorted
-        .ToArray();
-}
-
-bool HasValidExtension(string path) => Path.GetExtension(path).ToLower() switch 
-{ 
-    ".mp4" => true, 
-    _ => false 
-};
-
-void Add(string file)
-{
-    if (file.StartsWith('#'))
-    {
-        InternalAdd(file);
-        return;
-    }
-    FileInfo fileInfo = new FileInfo(file);
-    if (fileInfo.Length == 0)
-        return;
-    var info = GetExtendedInfo(file);
-    InternalAdd($"{M3u.ExtInfoLeader}:{info.Duration},{info.Title}");
-    InternalAdd(M3u.EncodePath(info.Path));
-    player.close();
-}
-
-ExtendedInfo GetExtendedInfo(string file)
-{
-    WMPLib.IWMPMedia clip = player.newMedia(file);
-    string relPath = file.Substring(path.Length + 1);
+    WMPLib.IWMPMedia clip = player.newMedia(path);
     int duration = clip.GetDuration();
-    string title = clip.GetTitle(() => Path.ChangeExtension(Path.GetFileName(relPath), null));
+    string title = clip.GetTitle(() => Path.ChangeExtension(Path.GetFileName(path), null));
     player.close();
-    return new(duration, title, relPath);
+    return new(duration, title, path);
 }
-
-void InternalAdd(string s)
-{
-    Console.WriteLine(s);
-    m3u.Add(s);
-}
-
-bool HasItems() => m3u.Count > 1;

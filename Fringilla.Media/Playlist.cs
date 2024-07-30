@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Fringilla.Media;
@@ -14,11 +15,12 @@ public partial class Playlist<T> : IList<T> where T : PlaylistEntry, new()
     /// </summary>
     /// <typeparam name="PlaylistEntryType"></typeparam>
     /// <param name="path"></param>
+    /// <param name="getExtendedInfo"></param>
     /// <returns></returns>
-    public static Playlist<PlaylistEntryType> CreateFromDirectory<PlaylistEntryType>(string path) where PlaylistEntryType : PlaylistEntry, new()
+    public static Playlist<PlaylistEntryType> CreateFromDirectory<PlaylistEntryType>(string path, GetExtendedInfo getExtendedInfo = null!, SearchOption searchOption = SearchOption.AllDirectories) where PlaylistEntryType : PlaylistEntry, new()
     {
-        Playlist<PlaylistEntryType> result = new();
-        result.ReadFromDirectory(path);
+        Playlist<PlaylistEntryType> result = new() { PlatformGetExtendedInfo = getExtendedInfo };
+        result.ReadFromDirectory(path, searchOption);
         return result;
     }
     /// <summary>
@@ -28,6 +30,7 @@ public partial class Playlist<T> : IList<T> where T : PlaylistEntry, new()
     /// <param name="searchOption"></param>
     public void ReadFromDirectory(string path, SearchOption searchOption = SearchOption.AllDirectories)
     {
+        _basePath = path.ExcludeTrailingPathDelimiter();
         Clear();
         var files = Sort(
             Filter(
@@ -36,17 +39,62 @@ public partial class Playlist<T> : IList<T> where T : PlaylistEntry, new()
         foreach (var file in files)
         {
             ExtendedInfo info = GetExtendedInfo(file);
-            T item = new() { Duration = info.Duration, Title = info.Title, Path = file };
+            T item = new() { Duration = info.Duration, Title = info.Title, Path = file.GetRelativePath(_basePath) };
             Add(item);
         }
     }
     /// <summary>
     /// 
     /// </summary>
+    /// <param name="path"></param>
+    public void WriteToFile(string path)
+    {
+        PlaylistEntry? first = this.FirstOrDefault();
+        if (first is null)
+            return;
+
+        bool isExtended = this.All(x => x.IsExtended);
+
+        StringBuilder playlist = new();
+
+        if (isExtended)
+            switch (first) 
+            { 
+                case M3u m3u:
+                    playlist.AppendLine(M3u.ExtFileHeader);
+                    break;
+                case Pls pls:
+                    playlist.AppendLine(Pls.FileHeader);
+                    break;
+            }
+
+        foreach (var file in _entries)
+        {
+            string s = isExtended ? file.ToString() ?? file.Path : file.Path;
+#if DEBUG
+            //Console.WriteLine(s);
+            System.Diagnostics.Debug.WriteLine(s);
+#endif
+            playlist.AppendLine(s);
+        }
+
+        if (isExtended)
+            switch (first)
+            {
+                case Pls pls:
+                    playlist.AppendLine($"{Pls.NumberOfEntriesKey}={Count}");
+                    playlist.AppendLine($"{Pls.VersionKey}=2");
+                    break;
+            }
+
+        File.WriteAllText(path, playlist.ToString());
+    }
+    /// <summary>
+    /// 
+    /// </summary>
     /// <param name="files"></param>
     /// <returns></returns>
-    protected virtual IEnumerable<string> Filter(IEnumerable<string> files) => files
-            .Where(HasValidExtension);
+    protected virtual IEnumerable<string> Filter(IEnumerable<string> files) => files.Where(CanAccept);
     /// <summary>
     /// 
     /// </summary>
@@ -82,7 +130,13 @@ public partial class Playlist<T> : IList<T> where T : PlaylistEntry, new()
     /// <summary>
     /// 
     /// </summary>
-    public Func<string, ExtendedInfo>? PlatformGetExtendedInfo { get; set; }
+    public GetExtendedInfo? PlatformGetExtendedInfo { get; set; }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
+    protected virtual bool CanAccept(string path) => HasValidExtension(path) && HasValidSize(path);
     /// <summary>
     /// 
     /// </summary>
@@ -93,9 +147,21 @@ public partial class Playlist<T> : IList<T> where T : PlaylistEntry, new()
         ".mp4" => true,
         _ => false
     };
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
+    protected virtual bool HasValidSize(string path) => new FileInfo(path).Length > 0;
 
     [GeneratedRegex(@"(\d+)\D+(\d+)")]
     private static partial Regex NumericExtract();
+
+    private string _basePath = string.Empty;
+    /// <summary>
+    /// 
+    /// </summary>
+    public string BasePath => _basePath;
 
     private readonly List<T> _entries = [];
 
@@ -126,10 +192,3 @@ public partial class Playlist<T> : IList<T> where T : PlaylistEntry, new()
     /// <inheritdoc/>
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_entries).GetEnumerator();
 }
-/// <summary>
-/// 
-/// </summary>
-/// <param name="Duration"></param>
-/// <param name="Title"></param>
-/// <param name="Path"></param>
-public readonly record struct ExtendedInfo (int Duration, string Title, string Path);
