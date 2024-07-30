@@ -1,11 +1,22 @@
 ﻿namespace Fringilla.Media;
 
+/// <summary>
+/// PlaylistEntry in .m3u format
+/// </summary>
 public class M3u : PlaylistEntry
 {
+    /// <summary>
+    /// File extension
+    /// </summary>
     public const string FileExtension = ".m3u"; // DO NOT TRANSLATE!
+    /// <summary>
+    /// Header of a playlist file
+    /// </summary>
     public const string ExtFileHeader = "#EXTM3U"; // DO NOT TRANSLATE!
+    /// <summary>
+    /// Leader for extended info
+    /// </summary>
     public const string ExtInfoLeader = "#EXTINF"; // DO NOT TRANSLATE!
-
     /// <summary>
     /// Replaces the '#', Extended M3U, marker with "%23"
     /// </summary>
@@ -30,7 +41,10 @@ public class M3u : PlaylistEntry
         //}
         //return sb.ToString();
     }
-
+    /// <summary>
+    /// Returns the lines for this entry as it should be written in a playlist
+    /// </summary>
+    /// <returns></returns>
     public override string ToString()
     {
         if (IsExtended)
