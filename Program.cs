@@ -4,13 +4,19 @@ WMPLib.WindowsMediaPlayer player = new();
 
 string path = (args.Length > 0 ? args[0] : Environment.CurrentDirectory).ExcludeTrailingPathDelimiter();
 
-Playlist<M3u> playlist = Playlist<M3u>.CreateFromDirectory<M3u>(path, GetExtendedInfo);
-string playlistPath = Path.Combine(path, "playlist.m3u");
+Playlist playlist = Playlist.CreateFromDirectory(path, GetExtendedInfo);
 if (playlist.Count > 0)
-    playlist.WriteToFile(playlistPath);
+{
+    playlist.WriteToFile<M3u>(Path.Combine(path, "playlist.m3u"));
+    playlist.WriteToFile<Pls>(Path.Combine(path, "playlist.pls"));
+    playlist.WriteToFile<PlaylistEntry>(Path.Combine(path, "playlist.txt"));
+}
 else
-    File.Delete(playlistPath);
-
+{
+    File.Delete(Path.Combine(path, "playlist.m3u"));
+    File.Delete(Path.Combine(path, "playlist.pls"));
+    File.Delete(Path.Combine(path, "playlist.txt"));
+}
 ExtendedInfo GetExtendedInfo(string path)
 {
     WMPLib.IWMPMedia clip = player.newMedia(path);

@@ -23,5 +23,5 @@ public static class PathExtensions
     /// <param name="path"></param>
     /// <param name="basePath"></param>
     /// <returns></returns>
-    public static string GetRelativePath(this string path, string basePath) => !string.IsNullOrEmpty(basePath) ? path[(basePath.ExcludeTrailingPathDelimiter().Length + 1)..] : path;
+    public static string GetRelativePath(this string path, string basePath) => !string.IsNullOrEmpty(basePath) ? Path.GetRelativePath(basePath.IncludeTrailingPathDelimiter(), path) : path;
 }

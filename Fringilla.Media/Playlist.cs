@@ -8,7 +8,7 @@ namespace Fringilla.Media;
 /// 
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public partial class Playlist<T> : IList<T> where T : PlaylistEntry, new()
+public partial class Playlist : IList<PlaylistEntry>
 {
     /// <summary>
     /// 
@@ -16,10 +16,11 @@ public partial class Playlist<T> : IList<T> where T : PlaylistEntry, new()
     /// <typeparam name="PlaylistEntryType"></typeparam>
     /// <param name="path"></param>
     /// <param name="getExtendedInfo"></param>
+    /// <param name="searchOption"></param>
     /// <returns></returns>
-    public static Playlist<PlaylistEntryType> CreateFromDirectory<PlaylistEntryType>(string path, GetExtendedInfo getExtendedInfo = null!, SearchOption searchOption = SearchOption.AllDirectories) where PlaylistEntryType : PlaylistEntry, new()
+    public static Playlist CreateFromDirectory(string path, GetExtendedInfo getExtendedInfo = null!, SearchOption searchOption = SearchOption.AllDirectories)
     {
-        Playlist<PlaylistEntryType> result = new() { PlatformGetExtendedInfo = getExtendedInfo };
+        Playlist result = new() { PlatformGetExtendedInfo = getExtendedInfo };
         result.ReadFromDirectory(path, searchOption);
         return result;
     }
@@ -30,7 +31,6 @@ public partial class Playlist<T> : IList<T> where T : PlaylistEntry, new()
     /// <param name="searchOption"></param>
     public void ReadFromDirectory(string path, SearchOption searchOption = SearchOption.AllDirectories)
     {
-        _basePath = path.ExcludeTrailingPathDelimiter();
         Clear();
         var files = Sort(
             Filter(
@@ -39,7 +39,7 @@ public partial class Playlist<T> : IList<T> where T : PlaylistEntry, new()
         foreach (var file in files)
         {
             ExtendedInfo info = GetExtendedInfo(file);
-            T item = new() { Duration = info.Duration, Title = info.Title, Path = file.GetRelativePath(_basePath) };
+            PlaylistEntry item = new() { Duration = info.Duration, Title = info.Title, Source = file };
             Add(item);
         }
     }
@@ -47,47 +47,14 @@ public partial class Playlist<T> : IList<T> where T : PlaylistEntry, new()
     /// 
     /// </summary>
     /// <param name="path"></param>
-    public void WriteToFile(string path)
+    public void WriteToFile<T>(string path) where T : PlaylistEntry
     {
-        PlaylistEntry? first = this.FirstOrDefault();
-        if (first is null)
-            return;
-
-        bool isExtended = this.All(x => x.IsExtended);
-
-        StringBuilder playlist = new();
-
-        if (isExtended)
-            switch (first) 
-            { 
-                case M3u m3u:
-                    playlist.AppendLine(M3u.ExtFileHeader);
-                    break;
-                case Pls pls:
-                    playlist.AppendLine(Pls.FileHeader);
-                    break;
-            }
-
-        foreach (var file in _entries)
-        {
-            string s = isExtended ? file.ToString() ?? file.Path : file.Path;
-#if DEBUG
-            //Console.WriteLine(s);
-            System.Diagnostics.Debug.WriteLine(s);
-#endif
-            playlist.AppendLine(s);
-        }
-
-        if (isExtended)
-            switch (first)
-            {
-                case Pls pls:
-                    playlist.AppendLine($"{Pls.NumberOfEntriesKey}={Count}");
-                    playlist.AppendLine($"{Pls.VersionKey}=2");
-                    break;
-            }
-
-        File.WriteAllText(path, playlist.ToString());
+        if (typeof(T) == typeof(M3u))
+            M3u.WriteToFile(this, path);
+        else if (typeof(T) == typeof(Pls))
+            Pls.WriteToFile(this, path);
+        else
+            PlaylistEntry.WriteToFile(this, path);
     }
     /// <summary>
     /// 
@@ -157,38 +124,32 @@ public partial class Playlist<T> : IList<T> where T : PlaylistEntry, new()
     [GeneratedRegex(@"(\d+)\D+(\d+)")]
     private static partial Regex NumericExtract();
 
-    private string _basePath = string.Empty;
-    /// <summary>
-    /// 
-    /// </summary>
-    public string BasePath => _basePath;
-
-    private readonly List<T> _entries = [];
+    private readonly List<PlaylistEntry> _entries = [];
 
     /// <inheritdoc/>
-    public T this[int index] { get => ((IList<T>)_entries)[index]; set => ((IList<T>)_entries)[index] = value; }
+    public PlaylistEntry this[int index] { get => ((IList<PlaylistEntry>)_entries)[index]; set => ((IList<PlaylistEntry>)_entries)[index] = value; }
     /// <inheritdoc/>
-    public int Count => ((ICollection<T>)_entries).Count;
+    public int Count => ((ICollection<PlaylistEntry>)_entries).Count;
     /// <inheritdoc/>
-    public bool IsReadOnly => ((ICollection<T>)_entries).IsReadOnly;
+    public bool IsReadOnly => ((ICollection<PlaylistEntry>)_entries).IsReadOnly;
     /// <inheritdoc/>
-    public void Add(T item) => ((ICollection<T>)_entries).Add(item);
+    public void Add(PlaylistEntry item) => ((ICollection<PlaylistEntry>)_entries).Add(item);
     /// <inheritdoc/>
-    public void Clear() => ((ICollection<T>)_entries).Clear();
+    public void Clear() => ((ICollection<PlaylistEntry>)_entries).Clear();
     /// <inheritdoc/>
-    public bool Contains(T item) => ((ICollection<T>)_entries).Contains(item);
+    public bool Contains(PlaylistEntry item) => ((ICollection<PlaylistEntry>)_entries).Contains(item);
     /// <inheritdoc/>
-    public void CopyTo(T[] array, int arrayIndex) => ((ICollection<T>)_entries).CopyTo(array, arrayIndex);
+    public void CopyTo(PlaylistEntry[] array, int arrayIndex) => ((ICollection<PlaylistEntry>)_entries).CopyTo(array, arrayIndex);
     /// <inheritdoc/>
-    public IEnumerator<T> GetEnumerator() => ((IEnumerable<T>)_entries).GetEnumerator();
+    public IEnumerator<PlaylistEntry> GetEnumerator() => ((IEnumerable<PlaylistEntry>)_entries).GetEnumerator();
     /// <inheritdoc/>
-    public int IndexOf(T item) => ((IList<T>)_entries).IndexOf(item);
+    public int IndexOf(PlaylistEntry item) => ((IList<PlaylistEntry>)_entries).IndexOf(item);
     /// <inheritdoc/>
-    public void Insert(int index, T item) => ((IList<T>)_entries).Insert(index, item);
+    public void Insert(int index, PlaylistEntry item) => ((IList<PlaylistEntry>)_entries).Insert(index, item);
     /// <inheritdoc/>
-    public bool Remove(T item) => ((ICollection<T>)_entries).Remove(item);
+    public bool Remove(PlaylistEntry item) => ((ICollection<PlaylistEntry>)_entries).Remove(item);
     /// <inheritdoc/>
-    public void RemoveAt(int index) => ((IList<T>)_entries).RemoveAt(index);
+    public void RemoveAt(int index) => ((IList<PlaylistEntry>)_entries).RemoveAt(index);
     /// <inheritdoc/>
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_entries).GetEnumerator();
 }
