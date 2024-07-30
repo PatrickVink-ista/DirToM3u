@@ -76,12 +76,13 @@ public partial class Playlist<T> : IList<T> where T : PlaylistEntry, new()
     /// </summary>
     /// <param name="path"></param>
     /// <returns></returns>
-    protected virtual ExtendedInfo GetExtendedInfo(string path) => PlatformGetExtendedInfo(path);
+    protected virtual ExtendedInfo GetExtendedInfo(string path) => 
+        PlatformGetExtendedInfo != null ? PlatformGetExtendedInfo(path) : DefaultGetExtendedInfo(path);
+    private static ExtendedInfo DefaultGetExtendedInfo(string path) => new(0, Path.ChangeExtension(Path.GetFileName(path), null));
     /// <summary>
     /// 
     /// </summary>
-    public Func<string, ExtendedInfo> PlatformGetExtendedInfo { get; set; } = 
-        (path) => new(0, Path.ChangeExtension(Path.GetFileName(path), null));
+    public Func<string, ExtendedInfo>? PlatformGetExtendedInfo { get; set; }
     /// <summary>
     /// 
     /// </summary>
