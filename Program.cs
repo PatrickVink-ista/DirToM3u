@@ -66,13 +66,20 @@ void Add(string file)
     FileInfo fileInfo = new FileInfo(file);
     if (fileInfo.Length == 0)
         return;
+    var info = GetExtendedInfo(file);
+    InternalAdd($"{M3u.ExtInfoLeader}:{info.Duration},{info.Title}");
+    InternalAdd(M3u.EncodePath(info.Path));
+    player.close();
+}
+
+ExtendedInfo GetExtendedInfo(string file)
+{
     WMPLib.IWMPMedia clip = player.newMedia(file);
     string relPath = file.Substring(path.Length + 1);
     int duration = clip.GetDuration();
     string title = clip.GetTitle(() => Path.ChangeExtension(Path.GetFileName(relPath), null));
-    InternalAdd($"{M3u.ExtInfoLeader}:{duration},{title}");
-    InternalAdd(M3u.EncodePath(relPath));
     player.close();
+    return new(duration, title, relPath);
 }
 
 void InternalAdd(string s)

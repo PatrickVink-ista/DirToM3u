@@ -36,7 +36,7 @@ public partial class Playlist<T> : IList<T> where T : PlaylistEntry, new()
         foreach (var file in files)
         {
             ExtendedInfo info = GetExtendedInfo(file);
-            T item = new() { Duration = info.duration, Title = info.title, Path = file };
+            T item = new() { Duration = info.Duration, Title = info.Title, Path = file };
             Add(item);
         }
     }
@@ -78,7 +78,7 @@ public partial class Playlist<T> : IList<T> where T : PlaylistEntry, new()
     /// <returns></returns>
     protected virtual ExtendedInfo GetExtendedInfo(string path) => 
         PlatformGetExtendedInfo != null ? PlatformGetExtendedInfo(path) : DefaultGetExtendedInfo(path);
-    private static ExtendedInfo DefaultGetExtendedInfo(string path) => new(0, Path.ChangeExtension(Path.GetFileName(path), null));
+    private static ExtendedInfo DefaultGetExtendedInfo(string path) => new(0, Path.ChangeExtension(Path.GetFileName(path), null), path);
     /// <summary>
     /// 
     /// </summary>
@@ -129,6 +129,7 @@ public partial class Playlist<T> : IList<T> where T : PlaylistEntry, new()
 /// <summary>
 /// 
 /// </summary>
-/// <param name="duration"></param>
-/// <param name="title"></param>
-public record ExtendedInfo (int duration, string title);
+/// <param name="Duration"></param>
+/// <param name="Title"></param>
+/// <param name="Path"></param>
+public readonly record struct ExtendedInfo (int Duration, string Title, string Path);
