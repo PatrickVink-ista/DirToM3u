@@ -8,6 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Fringilla.Media\**" />
+    <EmbeddedResource Remove="Fringilla.Media\**" />
+    <None Remove="Fringilla.Media\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="deploy.bat" />
   </ItemGroup>
 
@@ -21,6 +27,10 @@
       <Isolated>false</Isolated>
       <EmbedInteropTypes>true</EmbedInteropTypes>
     </COMReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="Fringilla.Media\Fringilla.Media.csproj" />
   </ItemGroup>
 
 </Project>

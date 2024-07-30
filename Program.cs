@@ -1,16 +1,19 @@
-﻿string path = args.Length > 0 ? args[0] : Environment.CurrentDirectory;
+﻿using Fringilla.Media;
+
+string path = args.Length > 0 ? args[0] : Environment.CurrentDirectory;
 if (path.Last() == Path.DirectorySeparatorChar)
     path = path.Substring(0, path.Length - 1);
 
 string[] files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
 
+//todo Replace with Playlist when Fringilla.Media.Playlist is ready
 List<string> m3u = [];
 
-WMPLib.WindowsMediaPlayer player = new WMPLib.WindowsMediaPlayer();
+WMPLib.WindowsMediaPlayer player = new();
 
 Sort();
 
-Add("#EXTM3U");
+Add(M3u.ExtFileHeader);
 
 foreach (var file in files)
 {
@@ -67,8 +70,8 @@ void Add(string file)
     string relPath = file.Substring(path.Length + 1);
     int duration = clip.GetDuration();
     string title = clip.GetTitle(() => Path.ChangeExtension(Path.GetFileName(relPath), null));
-    InternalAdd($"#EXTINF:{duration},{title}");
-    InternalAdd(M3uEncode(relPath));
+    InternalAdd($"{M3u.ExtInfoLeader}:{duration},{title}");
+    InternalAdd(M3u.EncodePath(relPath));
     player.close();
 }
 
@@ -79,23 +82,3 @@ void InternalAdd(string s)
 }
 
 bool HasItems() => m3u.Count > 1;
-
-string M3uEncode(string path)
-{
-    return path.Replace("%", "%25").Replace("#", "%23");
-    //System.Text.StringBuilder sb = new();
-    //foreach (char c in path)
-    //{
-    //    switch (c)
-    //    {
-    //        case '#':
-    //        case '%':
-    //            sb.Append(string.Format("%{0:X2}", (int)c)); 
-    //            break;
-    //        default:
-    //            sb.Append(c); 
-    //            break;
-    //    }
-    //}
-    //return sb.ToString();
-}
