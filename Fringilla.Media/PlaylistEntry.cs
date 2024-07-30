@@ -31,6 +31,6 @@ public abstract class PlaylistEntry
     /// <returns></returns>
     public static T Create<T>(string path, string title = default!, int duration = default) where T : PlaylistEntry, new()
     {
-        return new T() { Duration = duration, Title = title, Path = path };
+        return new() { Duration = duration, Title = title, Path = path };
     }
 }
