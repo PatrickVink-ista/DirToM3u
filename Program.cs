@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-string path = args.Length > 0 ? args[0] : Environment.CurrentDirectory;
+﻿string path = args.Length > 0 ? args[0] : Environment.CurrentDirectory;
 if (path.Last() == Path.DirectorySeparatorChar)
     path = path.Substring(0, path.Length - 1);
 
@@ -84,13 +82,14 @@ bool HasItems() => m3u.Count > 1;
 
 string M3uEncode(string path)
 {
-    return path.Replace("#", "%23");
-    //StringBuilder sb = new();
+    return path.Replace("%", "%25").Replace("#", "%23");
+    //System.Text.StringBuilder sb = new();
     //foreach (char c in path)
     //{
     //    switch (c)
     //    {
     //        case '#':
+    //        case '%':
     //            sb.Append(string.Format("%{0:X2}", (int)c)); 
     //            break;
     //        default:
