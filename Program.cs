@@ -1,4 +1,6 @@
-﻿string path = args.Length > 0 ? args[0] : Environment.CurrentDirectory;
+﻿using System.Text;
+
+string path = args.Length > 0 ? args[0] : Environment.CurrentDirectory;
 if (path.Last() == Path.DirectorySeparatorChar)
     path = path.Substring(0, path.Length - 1);
 
@@ -68,7 +70,7 @@ void Add(string file)
     int duration = clip.GetDuration();
     string title = clip.GetTitle(() => Path.ChangeExtension(Path.GetFileName(relPath), null));
     InternalAdd($"#EXTINF:{duration},{title}");
-    InternalAdd(relPath);
+    InternalAdd(M3uEncode(relPath));
     player.close();
 }
 
@@ -79,3 +81,22 @@ void InternalAdd(string s)
 }
 
 bool HasItems() => m3u.Count > 1;
+
+string M3uEncode(string path)
+{
+    return path.Replace("#", "%23");
+    //StringBuilder sb = new();
+    //foreach (char c in path)
+    //{
+    //    switch (c)
+    //    {
+    //        case '#':
+    //            sb.Append(string.Format("%{0:X2}", (int)c)); 
+    //            break;
+    //        default:
+    //            sb.Append(c); 
+    //            break;
+    //    }
+    //}
+    //return sb.ToString();
+}
