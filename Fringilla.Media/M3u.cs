@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace Fringilla.Media;
+﻿namespace Fringilla.Media;
 
 /// <summary>
 /// PlaylistEntry in .m3u format
@@ -55,32 +53,5 @@ public class M3u : PlaylistEntry
             return string.Join(Environment.NewLine, lines);
         }
         return Source;
-    }
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="playlist"></param>
-    /// <param name="path"></param>
-    public static new bool WriteToFile(Playlist playlist, string path)
-    {
-        if (playlist.FirstOrDefault() is null)
-            return false;
-
-        if (playlist.Any(x => !x.IsExtended))
-            return PlaylistEntry.WriteToFile(playlist, path);
-
-        StringBuilder content = new();
-        content.TeeLine(ExtFileHeader);
-
-        string basePath = Path.GetDirectoryName(Path.GetFullPath(path)) ?? string.Empty;
-        foreach (M3u track in playlist.Select(x => new M3u() { Duration = x.Duration, Title = x.Title, Source = x.Source.GetRelativePath(basePath) }))
-        {
-            string s = track.ToString();
-            content.TeeLine(s);
-        }
-
-        File.WriteAllText(path, content.ToString());
-
-        return true;
     }
 }

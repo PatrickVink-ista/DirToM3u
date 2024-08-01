@@ -46,19 +46,6 @@ public partial class Playlist : IList<PlaylistEntry>
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="path"></param>
-    public void WriteToFile<T>(string path) where T : PlaylistEntry
-    {
-        if (typeof(T) == typeof(M3u))
-            M3u.WriteToFile(this, path);
-        else if (typeof(T) == typeof(Pls))
-            Pls.WriteToFile(this, path);
-        else
-            PlaylistEntry.WriteToFile(this, path);
-    }
-    /// <summary>
-    /// 
-    /// </summary>
     /// <param name="files"></param>
     /// <returns></returns>
     protected virtual IEnumerable<string> Filter(IEnumerable<string> files) => files.Where(CanAccept);
@@ -103,15 +90,19 @@ public partial class Playlist : IList<PlaylistEntry>
     /// </summary>
     /// <param name="path"></param>
     /// <returns></returns>
-    protected virtual bool CanAccept(string path) => HasValidExtension(path) && HasValidSize(path);
+    protected virtual bool CanAccept(string path) => IsMediaValid(path) && IsSizeValue(path);
     /// <summary>
     /// 
     /// </summary>
     /// <param name="path"></param>
     /// <returns></returns>
-    protected virtual bool HasValidExtension(string path) => Path.GetExtension(path).ToLower() switch
+    protected virtual bool IsMediaValid(string path) => Path.GetExtension(path).ToLower() switch
     {
+        ".mkv" => true,
+        ".mp3" => true,
         ".mp4" => true,
+        ".wma" => true,
+        ".wmv" => true,
         _ => false
     };
     /// <summary>
@@ -119,7 +110,7 @@ public partial class Playlist : IList<PlaylistEntry>
     /// </summary>
     /// <param name="path"></param>
     /// <returns></returns>
-    protected virtual bool HasValidSize(string path) => new FileInfo(path).Length > 0;
+    protected virtual bool IsSizeValue(string path) => new FileInfo(path).Length > 0;
 
     [GeneratedRegex(@"(\d+)\D+(\d+)")]
     private static partial Regex NumericExtract();

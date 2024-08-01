@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace Fringilla.Media;
+﻿namespace Fringilla.Media;
 
 /// <summary>
 /// Base class for playlist entries
@@ -34,26 +32,5 @@ public class PlaylistEntry
     public static T Create<T>(string path, string title = default!, int duration = default) where T : PlaylistEntry, new()
     {
         return new() { Duration = duration, Title = title, Source = path };
-    }
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="playlist"></param>
-    /// <param name="path"></param>
-    public static bool WriteToFile(Playlist playlist, string path)
-    {
-        if (playlist.FirstOrDefault() is null)
-            return false;
-
-        StringBuilder content = new();
-        
-        string basePath = Path.GetDirectoryName(Path.GetFullPath(path)) ?? string.Empty;
-
-        foreach (string track in playlist.Select(x => x.Source.GetRelativePath(basePath)))
-            content.TeeLine(track);
-
-        File.WriteAllText(path, content.ToString());
-
-        return true;
     }
 }

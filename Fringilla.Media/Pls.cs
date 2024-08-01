@@ -1,6 +1,5 @@
-﻿using System.Text;
+﻿namespace Fringilla.Media;
 
-namespace Fringilla.Media;
 /// <summary>
 /// PlaylistEntry in .pls format
 /// </summary>
@@ -47,43 +46,12 @@ public class Pls : PlaylistEntry
         if (IsExtended)
         {
             string[] lines = [
-                $"{string.Format(FileKeyFormat, Index)}={Source}",
-                $"{string.Format(TitleKeyFormat, Index)}={Title}",
-                $"{string.Format(LengthKeyFormat, Index)}={Duration}",
+                $"{string.Format(Pls.FileKeyFormat, Index)}={Source}",
+                $"{string.Format(Pls.TitleKeyFormat, Index)}={Title}",
+                $"{string.Format(Pls.LengthKeyFormat, Index)}={Duration}",
                 ];
             return string.Join(Environment.NewLine, lines);
         }
         return Source;
-    }
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="playlist"></param>
-    /// <param name="path"></param>
-    public static new bool WriteToFile(Playlist playlist, string path)
-    {
-        if (playlist.FirstOrDefault() is null)
-            return false;
-
-        bool isExtended = playlist.All(x => x.IsExtended);
-
-        StringBuilder content = new();
-
-        content.TeeLine(FileHeader);
-
-        string basePath = Path.GetDirectoryName(Path.GetFullPath(path)) ?? string.Empty;
-        int index = 0;
-        foreach (Pls track in playlist.Select(x => new Pls() { Duration = x.Duration, Title = x.Title, Source = x.Source.GetRelativePath(basePath), Index = ++index }))
-        {
-            string s = isExtended ? track.ToString() ?? track.Source : track.Source;
-            content.TeeLine(s);
-        }
-
-        content.TeeLine($"{NumberOfEntriesKey}={playlist.Count}");
-        content.TeeLine($"{VersionKey}=2");
-
-        File.WriteAllText(path, content.ToString());
-
-        return true;
     }
 }

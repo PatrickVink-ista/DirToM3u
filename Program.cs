@@ -7,9 +7,9 @@ string path = (args.Length > 0 ? args[0] : Environment.CurrentDirectory).Exclude
 Playlist playlist = Playlist.CreateFromDirectory(path, GetExtendedInfo);
 if (playlist.Count > 0)
 {
-    playlist.WriteToFile<M3u>(Path.Combine(path, "playlist.m3u"));
-    playlist.WriteToFile<Pls>(Path.Combine(path, "playlist.pls"));
-    playlist.WriteToFile<PlaylistEntry>(Path.Combine(path, "playlist.txt"));
+    playlist.WriteToM3uFile(Path.Combine(path, "playlist.m3u"));
+    playlist.WriteToPlsFile(Path.Combine(path, "playlist.pls"));
+    playlist.WriteToPlainTextFile(Path.Combine(path, "playlist.txt"));
 }
 else
 {
