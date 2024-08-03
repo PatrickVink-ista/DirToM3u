@@ -13,7 +13,6 @@ public partial class Playlist : IList<PlaylistEntry>
     /// <summary>
     /// 
     /// </summary>
-    /// <typeparam name="PlaylistEntryType"></typeparam>
     /// <param name="path"></param>
     /// <param name="getExtendedInfo"></param>
     /// <param name="searchOption"></param>
@@ -48,7 +47,7 @@ public partial class Playlist : IList<PlaylistEntry>
     /// </summary>
     /// <param name="files"></param>
     /// <returns></returns>
-    protected virtual IEnumerable<string> Filter(IEnumerable<string> files) => files.Where(CanAccept);
+    protected virtual IEnumerable<string> Filter(IEnumerable<string> files) => files.Where(CanAccept).ToList();
     /// <summary>
     /// 
     /// </summary>
@@ -56,23 +55,43 @@ public partial class Playlist : IList<PlaylistEntry>
     /// <returns></returns>
     protected virtual IEnumerable<string> Sort(IEnumerable<string> files)
     {
-        IEnumerable<(Match, string f)> matches = files
-            .Select(f => (NumericExtract().Match(Path.GetFileName(f)), f));
-        if (matches.Count() != files.Count())
+        try
+        {
+            List<MatchWithSource> matches = files
+                .Select(source => new MatchWithSource(NumericExtract.Match(Path.GetFileNameWithoutExtension(source)), source))
+                .ToList();
+            if (matches.Any(x => !x.RegexMatch.Success) || matches.Count != files.Count())
+            {
+                return files;
+            }
+            IEnumerable<(int, int, string)> keyed = matches
+                .Select(x => CreateKey(x))
+               .ToList();
+            IEnumerable<(int, int, string)> indexed = keyed
+                .OrderBy(x => x.Item1).ThenBy(x => x.Item2)
+                .ToList();
+            IEnumerable<string> sorted = indexed
+                .Select(x => x.Item3)
+                .ToList();
+            return sorted;
+        }
+        catch (Exception ex)
         {
             return files;
         }
-        IEnumerable<(int, int, string)> keyed = matches
-            .Select(x => (
-                int.Parse(x.Item1.Groups.Values.ToList()[1].Value),
-                int.Parse(x.Item1.Groups.Values.ToList()[2].Value),
-                x.Item2));
-        IOrderedEnumerable<(int, int, string)> indexed = keyed
-            .OrderBy(x => x.Item1).ThenBy(x => x.Item2);
-        IEnumerable<string> sorted = indexed
-            .Select(x => x.Item3);
-        return sorted;
     }
+
+    private static (int, int, string) CreateKey(MatchWithSource match)
+    {
+        List<Group> groups = match.RegexMatch.Groups.Values.ToList();
+        if (groups.Count < 3)
+            return (0, 0, match.Source);
+        return (
+                int.Parse(groups[1].Value),
+                int.Parse(groups[2].Value),
+                match.Source);
+    }
+
     /// <summary>
     /// 
     /// </summary>
@@ -90,13 +109,13 @@ public partial class Playlist : IList<PlaylistEntry>
     /// </summary>
     /// <param name="path"></param>
     /// <returns></returns>
-    protected virtual bool CanAccept(string path) => IsMediaValid(path) && IsSizeValue(path);
+    protected virtual bool CanAccept(string path) => IsExtensionValid(path) && IsFileValid(path);
     /// <summary>
     /// 
     /// </summary>
     /// <param name="path"></param>
     /// <returns></returns>
-    protected virtual bool IsMediaValid(string path) => Path.GetExtension(path).ToLower() switch
+    protected virtual bool IsExtensionValid(string path) => Path.GetExtension(path).ToLower() switch
     {
         ".mkv" => true,
         ".mp3" => true,
@@ -110,10 +129,11 @@ public partial class Playlist : IList<PlaylistEntry>
     /// </summary>
     /// <param name="path"></param>
     /// <returns></returns>
-    protected virtual bool IsSizeValue(string path) => new FileInfo(path).Length > 0;
+    protected virtual bool IsFileValid(string path) => File.Exists(path) && new FileInfo(path).Length > 0;
 
-    [GeneratedRegex(@"(\d+)\D+(\d+)")]
-    private static partial Regex NumericExtract();
+    //[GeneratedRegex(@"(\d+)\D+(\d+)")]
+    //private static partial Regex NumericExtract();
+    private static Regex NumericExtract => NumericExtractRegex.Instance;
 
     private readonly List<PlaylistEntry> _entries = [];
 
@@ -143,4 +163,17 @@ public partial class Playlist : IList<PlaylistEntry>
     public void RemoveAt(int index) => ((IList<PlaylistEntry>)_entries).RemoveAt(index);
     /// <inheritdoc/>
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_entries).GetEnumerator();
+}
+
+internal record struct MatchWithSource(Match RegexMatch, string Source)
+{
+    public static implicit operator (Match, string)(MatchWithSource value)
+    {
+        return (value.RegexMatch, value.Source);
+    }
+
+    public static implicit operator MatchWithSource((Match RegexMatch, string Source) value)
+    {
+        return new MatchWithSource(value.RegexMatch, value.Source);
+    }
 }
