@@ -1,17 +1,15 @@
 ﻿using System.Collections;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Fringilla.Media;
 
 /// <summary>
-/// 
+/// Container for <see cref="PlaylistEntry"/>
 /// </summary>
-/// <typeparam name="T"></typeparam>
 public partial class Playlist : IList<PlaylistEntry>
 {
     /// <summary>
-    /// 
+    /// Creates a Playlist filled by given path
     /// </summary>
     /// <param name="path"></param>
     /// <param name="getExtendedInfo"></param>
@@ -23,8 +21,9 @@ public partial class Playlist : IList<PlaylistEntry>
         result.ReadFromDirectory(path, searchOption);
         return result;
     }
+    
     /// <summary>
-    /// 
+    /// Fills this Playlist by given path
     /// </summary>
     /// <param name="path"></param>
     /// <param name="searchOption"></param>
@@ -42,12 +41,43 @@ public partial class Playlist : IList<PlaylistEntry>
             Add(item);
         }
     }
+
+    #region Filtering
     /// <summary>
     /// 
     /// </summary>
     /// <param name="files"></param>
     /// <returns></returns>
     protected virtual IEnumerable<string> Filter(IEnumerable<string> files) => files.Where(CanAccept).ToList();
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
+    protected virtual bool CanAccept(string path) => IsExtensionValid(path) && IsFileValid(path);
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
+    protected virtual bool IsExtensionValid(string path) => Path.GetExtension(path).ToLower() switch
+    {
+        ".mkv" => true,
+        ".mp3" => true,
+        ".mp4" => true,
+        ".wma" => true,
+        ".wmv" => true,
+        _ => false
+    };
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
+    protected virtual bool IsFileValid(string path) => File.Exists(path) && new FileInfo(path).Length > 0;
+    #endregion
+
+    #region Sorting
     /// <summary>
     /// 
     /// </summary>
@@ -92,6 +122,12 @@ public partial class Playlist : IList<PlaylistEntry>
                 match.Source);
     }
 
+    //[GeneratedRegex(@"(\d+)\D+(\d+)")]
+    //private static partial Regex NumericExtract();
+    private static Regex NumericExtract => NumericExtractRegex.Instance;
+    #endregion
+
+    #region ExtendedInfo
     /// <summary>
     /// 
     /// </summary>
@@ -104,39 +140,11 @@ public partial class Playlist : IList<PlaylistEntry>
     /// 
     /// </summary>
     public GetExtendedInfo? PlatformGetExtendedInfo { get; set; }
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="path"></param>
-    /// <returns></returns>
-    protected virtual bool CanAccept(string path) => IsExtensionValid(path) && IsFileValid(path);
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="path"></param>
-    /// <returns></returns>
-    protected virtual bool IsExtensionValid(string path) => Path.GetExtension(path).ToLower() switch
-    {
-        ".mkv" => true,
-        ".mp3" => true,
-        ".mp4" => true,
-        ".wma" => true,
-        ".wmv" => true,
-        _ => false
-    };
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="path"></param>
-    /// <returns></returns>
-    protected virtual bool IsFileValid(string path) => File.Exists(path) && new FileInfo(path).Length > 0;
-
-    //[GeneratedRegex(@"(\d+)\D+(\d+)")]
-    //private static partial Regex NumericExtract();
-    private static Regex NumericExtract => NumericExtractRegex.Instance;
+    #endregion
 
     private readonly List<PlaylistEntry> _entries = [];
 
+    #region IList<PlaylistEntry>
     /// <inheritdoc/>
     public PlaylistEntry this[int index] { get => ((IList<PlaylistEntry>)_entries)[index]; set => ((IList<PlaylistEntry>)_entries)[index] = value; }
     /// <inheritdoc/>
@@ -163,8 +171,10 @@ public partial class Playlist : IList<PlaylistEntry>
     public void RemoveAt(int index) => ((IList<PlaylistEntry>)_entries).RemoveAt(index);
     /// <inheritdoc/>
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_entries).GetEnumerator();
+    #endregion
 }
 
+// Helper record struct for sorting
 internal record struct MatchWithSource(Match RegexMatch, string Source)
 {
     public static implicit operator (Match, string)(MatchWithSource value)
