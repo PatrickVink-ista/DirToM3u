@@ -2,7 +2,7 @@
   "profiles": {
     "DirToM3u": {
       "commandName": "Project",
-      "commandLineArgs": "\"E:\\BACKUP\\Packt\\Azure\\AZ-900-Microsoft-Azure-Fundamentals-Certification-2021 [Video][9781800206946]\""
+      "commandLineArgs": "\"Y:\\CapturedVideos\\ASP.NET tutorial for beginners\""
     }
   }
 }

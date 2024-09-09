@@ -1,8 +1,10 @@
 ﻿using Fringilla.Media;
 
-WMPLib.WindowsMediaPlayer player = new();
+WMPLib.WindowsMediaPlayer? player = null;
 
 string path = (args.Length > 0 ? args[0] : Environment.CurrentDirectory).ExcludeTrailingPathDelimiter();
+if (!Directory.Exists(path))
+    throw new DirectoryNotFoundException(path);
 
 Playlist playlist = Playlist.CreateFromDirectory(path, GetExtendedInfo);
 if (playlist.Count > 0)
@@ -19,7 +21,7 @@ else
 }
 ExtendedInfo GetExtendedInfo(string path)
 {
-    WMPLib.IWMPMedia clip = player.newMedia(path);
+    WMPLib.IWMPMedia clip = (player ??= new()).newMedia(path);
     int duration = clip.GetDuration();
     string title = clip.GetTitle(() => Path.ChangeExtension(Path.GetFileName(path), null));
     player.close();

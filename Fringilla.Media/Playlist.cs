@@ -56,17 +56,46 @@ public partial class Playlist : IList<PlaylistEntry>
     /// <returns></returns>
     protected virtual bool CanAccept(string path) => IsExtensionValid(path) && IsFileValid(path);
     /// <summary>
-    /// 
+    /// https://en.wikipedia.org/wiki/Video_file_format https://fileinfo.com/filetypes/video
     /// </summary>
     /// <param name="path"></param>
     /// <returns></returns>
     protected virtual bool IsExtensionValid(string path) => Path.GetExtension(path).ToLower() switch
     {
-        ".mkv" => true,
+        // audio
+        ".flac" => true,
         ".mp3" => true,
-        ".mp4" => true,
+        ".mpa" => true,
+        ".ogg" => true,
+        ".wav" => true,
         ".wma" => true,
+        // video
+        ".3g2" => true,
+        ".3gp" => true,
+        ".avi" => true,
+        ".divx" => true,
+        ".f4a" => true,
+        ".f4b" => true,
+        ".f4p" => true,
+        ".f4v" => true,
+        ".flv" => true,
+        ".mkv" => true,
+        ".mov" => true,
+        ".mp2" => true,
+        ".mp4" => true,
+        ".mpe" => true,
+        ".mpeg" => true,
+        ".mpg" => true,
+        ".m2ts" => true,
+        ".m2v" => true,
+        ".m4v" => true,
+        ".mts" => true,
+        ".ogv" => true,
+        ".swf" => true,
+        ".ts" => true,
+        ".webm" => true,
         ".wmv" => true,
+        // unsupported
         _ => false
     };
     /// <summary>
@@ -105,7 +134,7 @@ public partial class Playlist : IList<PlaylistEntry>
                 .ToList();
             return sorted;
         }
-        catch (Exception ex)
+        catch
         {
             return files;
         }
