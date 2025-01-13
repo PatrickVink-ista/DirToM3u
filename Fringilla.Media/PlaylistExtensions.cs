@@ -13,21 +13,21 @@ public static class PlaylistExtensions
     public static bool WriteToFile<T>(this Playlist playlist, string path) where T : PlaylistEntry
     {
         if (typeof(T) == typeof(M3u))
-            return new M3uPlaylistWriter().WriteToFile(playlist, path);
+            return playlist.WriteToM3uFile(path);
         else if (typeof(T) == typeof(Pls))
-            return new PlsPlaylistWriter().WriteToFile(playlist, path);
+            return playlist.WriteToPlsFile(path);
         else
-            return new PlainTextPlaylistWriter().WriteToFile(playlist, path);
+            return playlist.WriteToPlainTextFile(path);
     }
     /// <summary>
-    /// Writes an .pls file, when is extended
+    /// Writes an .m3u file, when is extended
     /// </summary>
     /// <param name="playlist"></param>
     /// <param name="path"></param>
     /// <returns></returns>
     public static bool WriteToM3uFile(this Playlist playlist, string path) => new M3uPlaylistWriter().WriteToFile(playlist, path);
     /// <summary>
-    /// Writes an .m3u file, when is extended
+    /// Writes an .pls file, when is extended
     /// </summary>
     /// <param name="playlist"></param>
     /// <param name="path"></param>
